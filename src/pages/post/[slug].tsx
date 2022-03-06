@@ -1,8 +1,14 @@
+/* eslint-disable react/no-danger */
 import { GetStaticPaths, GetStaticProps } from 'next';
+import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import Prismic from '@prismicio/client';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import Header from '../../components/Header';
 import { getPrismicClient } from '../../services/prismic';
-
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
@@ -27,69 +33,108 @@ interface PostProps {
   post: Post;
 }
 
-export default function Post(): JSX.Element {
+export default function Post({ post }: PostProps): JSX.Element {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
+  const formatedDate = format(
+    new Date(post.first_publication_date),
+    'dd MMM yyyy',
+    { locale: ptBR }
+  );
+
   return (
     <>
+      <Head>
+        <title>{post.data.title} | spacetraveling</title>
+      </Head>
       <Header />
-      <img src="/banner.svg" alt="imagem" className={styles.banner} />
+      <img src={post.data.banner.url} alt="imagem" className={styles.banner} />
       <main className={commonStyles.container}>
         <div className={styles.post}>
           <div className={styles.postTop}>
-            <h1>Algum titulo</h1>
+            <h1>{post.data.title}</h1>
             <ul>
               <li>
                 <FiCalendar />
-                12 Mar 2022
+                {formatedDate}
               </li>
               <li>
                 <FiUser />
-                Hugo Alves Varella
+                {post.data.author}
               </li>
               <li>
                 <FiClock />5 minutos
               </li>
             </ul>
           </div>
-          <article>
-            <h2>Titulo secao</h2>
-            <p>
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quod
-              esse qui, delectus sunt accusantium corrupti unde nisi recusandae
-              voluptate illum laborum hic reiciendis expedita. Esse impedit
-              recusandae rem et excepturi! Lorem ipsum dolor sit amet
-              consectetur adipisicing elit. Tenetur quaerat soluta ullam saepe
-              ut id quo nam. Optio atque necessitatibus autem quas perspiciatis.
-              Cumque consequuntur doloremque quos voluptas, beatae tenetur.
-              Lorem ipsum,
-              <strong>
-                dolor sit amet consectetur adipisicing elit. Accusantium
-                assumenda
-              </strong>
-              rerum perferendis
-              <a href="/"> veritatis atque, hic molestias quibusdam </a>iusto
-              sed nobis et facere vitae repudiandae. Odio eum incidunt quaerat
-              minus rem. Lorem ipsum dolor sit amet consectetur adipisicing
-              elit. Illo cupiditate soluta rem dolor culpa atque at a odio vero
-              ea officia, voluptatum ad enim sapiente iste. Sint delectus
-              blanditiis nisi.
-            </p>
-          </article>
+          {post.data.content.map(content => {
+            return (
+              <article key={content.heading}>
+                <h2>{content.heading}</h2>
+                <div
+                  className={styles.postContet}
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body),
+                  }}
+                />
+              </article>
+            );
+          })}
         </div>
       </main>
     </>
   );
 }
 
-// export const getStaticPaths = async () => {
-//   const prismic = getPrismicClient();
-//   const posts = await prismic.query(TODO);
+export const getStaticPaths: GetStaticPaths = async () => {
+  const prismic = getPrismicClient();
+  const posts = await prismic.query([
+    Prismic.predicates.at('document.type', 'posts'),
+  ]);
 
-//   // TODO
-// };
+  const paths = posts.results.map(post => {
+    return {
+      params: {
+        slug: post.uid,
+      },
+    };
+  });
 
-// export const getStaticProps = async context => {
-//   const prismic = getPrismicClient();
-//   const response = await prismic.getByUID(TODO);
+  return {
+    paths,
+    fallback: true,
+  };
+};
 
-//   // TODO
-// };
+export const getStaticProps: GetStaticProps = async context => {
+  const prismic = getPrismicClient();
+  const { slug } = context.params;
+  const response = await prismic.getByUID('posts', String(slug), {});
+
+  const post = {
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
+    data: {
+      title: response.data.title,
+      subtitle: response.data.subtitle,
+      author: response.data.author,
+      banner: {
+        url: response.data.banner.url,
+      },
+      content: response.data.content.map(content => {
+        return {
+          heading: content.heading,
+          body: [...content.body],
+        };
+      }),
+    },
+  };
+
+  return {
+    props: { post },
+  };
+};

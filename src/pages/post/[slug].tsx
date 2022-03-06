@@ -1,4 +1,6 @@
+/* eslint-disable no-return-assign */
 /* eslint-disable react/no-danger */
+/* eslint-disable no-param-reassign */
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
@@ -34,6 +36,16 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps): JSX.Element {
+  const totalWords = post.data.content.reduce((total, contentItem) => {
+    total += contentItem.heading.split(' ').length;
+
+    const words = contentItem.body.map(item => item.text.split(' ').length);
+    words.map(word => (total += word));
+    return total;
+  }, 0);
+
+  const readTime = Math.ceil(totalWords / 200);
+
   const router = useRouter();
 
   if (router.isFallback) {
@@ -67,7 +79,8 @@ export default function Post({ post }: PostProps): JSX.Element {
                 {post.data.author}
               </li>
               <li>
-                <FiClock />5 minutos
+                <FiClock />
+                {`${readTime} min`}
               </li>
             </ul>
           </div>

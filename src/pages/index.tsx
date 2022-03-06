@@ -1,7 +1,9 @@
 import { GetStaticProps } from 'next';
-
+import Head from 'next/head';
+import Link from 'next/link';
+import { FiCalendar, FiUser } from 'react-icons/fi';
+import Header from '../components/Header';
 import { getPrismicClient } from '../services/prismic';
-
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
 
@@ -24,9 +26,74 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-// export default function Home() {
-//   // TODO
-// }
+export default function Home(): JSX.Element {
+  return (
+    <>
+      <Head>
+        <title>Home | spacetraveling</title>
+      </Head>
+
+      <main className={commonStyles.container}>
+        <Header />
+
+        <div className={styles.posts}>
+          <Link href="/">
+            <a className={styles.post}>
+              <strong>Como utilizar Hooks</strong>
+              <p>Pensando em sincronização em vez de ciclos de vida.</p>
+              <ul>
+                <li>
+                  <FiCalendar />
+                  15 Mar 2022
+                </li>
+                <li>
+                  <FiUser />
+                  Hugo Alves Varella
+                </li>
+              </ul>
+            </a>
+          </Link>
+
+          <Link href="/">
+            <a className={styles.post}>
+              <strong>Como utilizar Hooks</strong>
+              <p>Pensando em sincronização em vez de ciclos de vida.</p>
+              <ul>
+                <li>
+                  <FiCalendar />
+                  15 Mar 2022
+                </li>
+                <li>
+                  <FiUser />
+                  Hugo Alves Varella
+                </li>
+              </ul>
+            </a>
+          </Link>
+
+          <Link href="/">
+            <a className={styles.post}>
+              <strong>Como utilizar Hooks</strong>
+              <p>Pensando em sincronização em vez de ciclos de vida.</p>
+              <ul>
+                <li>
+                  <FiCalendar />
+                  15 Mar 2022
+                </li>
+                <li>
+                  <FiUser />
+                  Hugo Alves Varella
+                </li>
+              </ul>
+            </a>
+          </Link>
+
+          <button type="button">Carregar mais posts</button>
+        </div>
+      </main>
+    </>
+  );
+}
 
 // export const getStaticProps = async () => {
 //   // const prismic = getPrismicClient();

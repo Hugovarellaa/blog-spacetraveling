@@ -11,7 +11,7 @@ export default class Comments extends Component<ReactElement> {
     script.setAttribute('async', 'true');
     script.setAttribute('repo', 'Hugovarellaa/blog-spacetraveling');
     script.setAttribute('issue-term', 'pathname');
-    script.setAttribute('theme', 'github-light');
+    script.setAttribute('theme', 'github-dark');
     anchor.appendChild(script);
   }
 
